@@ -1,42 +1,7 @@
 # Assignment 1:  
 library(tweedie) 
 library(ggplot2)
-library(tictoc)
-library(knitr)
-library(tidyverse)
 
-printTicTocLog <-
-  function() {
-    tic.log() %>%
-      unlist %>%
-      tibble(logvals = .) %>%
-      separate(logvals,
-               sep = ":",
-               into = c("Function type", "log")) %>%
-      mutate(log = str_trim(log)) %>%
-      separate(log,
-               sep = " ",
-               into = c("Seconds"),
-               extra = "drop")
-  }
-
-# for output
-printTicTocLog() %>%
-  knitr::kable()
-
-# for creating a tictoc log and put into a table using the function from above:
-tic.clearlog()
-tic("test tictoc")
-
-a_test <- rnorm(100, mean=1, sd=1)
-
-toc(log = TRUE)
-printTicTocLog() %>%
-  knitr::kable()
-
-
-tic("first run")
-# functions for the dataset
 simTweedieTest <-  
   function(N){ 
     t.test( 
@@ -61,7 +26,6 @@ df <-
     share_reject = NA) 
 
 
-# the function running
 for(i in 1:nrow(df)){ 
   df$share_reject[i] <-  
     MTweedieTests( 
@@ -71,13 +35,10 @@ for(i in 1:nrow(df)){
 } 
 
 
-toc(log = TRUE)
-printTicTocLog() %>%
-  knitr::kable()
 
 
 ## Assignemnt 4 
-   
+
 # This is one way of solving it - maybe you have a better idea? 
 # First, write a function for simulating data, where the "type" 
 # argument controls the distribution. We also need to ensure 
@@ -169,6 +130,3 @@ df %>%
   geom_line() +
   geom_hline(yintercept = .05) +
   theme_bw() 
-
-
-
