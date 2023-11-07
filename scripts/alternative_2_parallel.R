@@ -1,42 +1,9 @@
+# parallel alternative 2
 # Assignment 1:  
 library(tweedie) 
 library(ggplot2)
-library(tictoc)
-library(knitr)
-library(tidyverse)
+library(doParallel)
 
-printTicTocLog <-
-  function() {
-    tic.log() %>%
-      unlist %>%
-      tibble(logvals = .) %>%
-      separate(logvals,
-               sep = ":",
-               into = c("Function type", "log")) %>%
-      mutate(log = str_trim(log)) %>%
-      separate(log,
-               sep = " ",
-               into = c("Seconds"),
-               extra = "drop")
-  }
-
-# for output
-printTicTocLog() %>%
-  knitr::kable()
-
-# for creating a tictoc log and put into a table using the function from above:
-tic.clearlog()
-tic("test tictoc")
-
-a_test <- rnorm(100, mean=1, sd=1)
-
-toc(log = TRUE)
-printTicTocLog() %>%
-  knitr::kable()
-
-
-tic("first run")
-# functions for the dataset
 simTweedieTest <-  
   function(N){ 
     t.test( 
@@ -60,8 +27,36 @@ df <-
     M = 1000, 
     share_reject = NA) 
 
+# -----------------------------------------------------------#
+# edit this for the alternative 2 using parallel package
 
-# the function running
+maxcores <- 8
+Cores <- min(parallel::detectCores(), maxcores)
+# Instantiate the cores:
+cl <- makeCluster(Cores)
+# Next we register the cluster..
+registerDoParallel(cl)
+# Take the time as before:
+res <-
+  foreach(
+    i = 1:nrow(df_res),
+    .combine = 'rbind',
+    .packages = c('magrittr', 'dplyr')
+  ) %dopar%
+  tibble(
+    date = df_res$date[i],
+    lead_days = df_res$lead_days[i],
+    neg_eq =
+      test_neg_equity(
+        df,
+        startdate = df_res$date[i],
+        lead_days = df_res$lead_days[i]
+      )
+  )
+# Now that we're done, we close off the clusters
+stopCluster(cl)
+
+
 for(i in 1:nrow(df)){ 
   df$share_reject[i] <-  
     MTweedieTests( 
@@ -70,14 +65,11 @@ for(i in 1:nrow(df)){
       sig=.05) 
 } 
 
-
-toc(log = TRUE)
-printTicTocLog() %>%
-  knitr::kable()
+# ---------------------------------------------------------- #
 
 
 ## Assignemnt 4 
-   
+
 # This is one way of solving it - maybe you have a better idea? 
 # First, write a function for simulating data, where the "type" 
 # argument controls the distribution. We also need to ensure 
@@ -169,6 +161,3 @@ df %>%
   geom_line() +
   geom_hline(yintercept = .05) +
   theme_bw() 
-
-
-
